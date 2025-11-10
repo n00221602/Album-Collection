@@ -15,16 +15,18 @@ const seedData = async () => {
     // Create users
     const passwordHash1 = await User.hashPassword("password123");
     const user1 = await User.create({
-      email: "joe@example.com",
       name: "Joe Doe",
+      email: "joe@example.com",
       passwordHash: passwordHash1,
+      role: "admin",
     });
 
     const passwordHash2 = await User.hashPassword("password456");
     const user2 = await User.create({
-      email: "megan@example.com",
       name: "Megan Wall",
+      email: "megan@example.com",
       passwordHash: passwordHash2,
+      role: "user",
     });
 
     console.log("Created users");
