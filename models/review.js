@@ -8,12 +8,17 @@ const reviewSchema = new mongoose.Schema(
       max: 10,
       required: true,
     },
-    review: {
+    comment: {
       type: String,
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: true,
+      index: true,
+    },
+    albumId: {
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
       index: true,
     },
@@ -28,7 +33,6 @@ reviewSchema.set("toJSON", {
     delete returnedObject.__v;
     delete returnedObject.createdAt;
     delete returnedObject.updatedAt;
-    delete returnedObject.userId;
   },
 });
 

@@ -3,14 +3,14 @@ import Artist from "../models/artist.js";
 import { albumSchema, albumIdSchema } from "../utils/validators.js";
 import { HttpError, NOT_FOUND } from "../utils/HttpError.js";
 import { validate } from "../middleware/validateRequest.js";
-import { requireAuth, requireAdmin } from "../middleware/auth.js";
+import { requireAdmin } from "../middleware/auth.js";
 
 //const SUCCESS_NO_CONTENT = 204;
 
 const albumRouter = Router();
 
 //Get all albums by extracting them from each artist
-albumRouter.get("/", requireAuth, async (req, res) => {
+albumRouter.get("/", async (req, res) => {
   const artists = await Artist.find().exec();
 
   //Define empty array to hold all albums
@@ -36,7 +36,7 @@ albumRouter.get("/", requireAuth, async (req, res) => {
 });
 
 //Get an album by ID
-albumRouter.get("/:id", requireAuth, async (req, res) => {
+albumRouter.get("/:id", async (req, res) => {
   const artists = await Artist.find().exec();
 
   let targetAlbum = null;

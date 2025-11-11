@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import User from "../models/user.js";
-//import Album from "../models/album.js";
 import Artist from "../models/artist.js";
+import Review from "../models/review.js";
 
 //Token: VdealDdEcIKuzMoTGClVUUykVMMuDKFLDehQNoVW
 
@@ -13,6 +13,7 @@ const seedData = async () => {
     // Clear existing data
     await User.deleteMany({});
     await Artist.deleteMany({});
+    await Review.deleteMany({});
     console.log("Cleared existing data");
 
     // Create users
@@ -103,75 +104,26 @@ const seedData = async () => {
       bio: "English electronic dance music band formed in 1990.",
     });
 
-    // Create example albums with Joe ID
-    // await Album.create([
-    //   {
-    //     title: artist1.releases[0],
-    //     artist: artist1.name,
-    //     genre: ["Hip-Hop", "Rap"],
-    //     year: 2019,
-    //     listened: true,
-    //     rating: 8.5,
-    //     review: "woahhhhhh",
-    //     artistId: artist1._id,
-    //     userId: user1._id,
-    //   },
-    //   {
-    //     title: "In search of...",
-    //     artist: "N.E.R.D",
-    //     genre: ["Rock", "Hip-Hop"],
-    //     year: 2001,
-    //     listened: false,
-    //     artistId: artist2._id,
-    //     userId: user1._id,
-    //   },
-    //   {
-    //     title: "Demon Days",
-    //     artist: "Gorillaz",
-    //     genre: ["Alternative", "Indie"],
-    //     year: 2005,
-    //     listened: true,
-    //     rating: 8.0,
-    //     review: "wowwww",
-    //     artistId: artist3._id,
-    //     userId: user1._id,
-    //   },
-    // ]);
+    const review1 = await Review.create({
+      rating: 9,
+      comment: "woahhhh",
+      userId: user1._id,
+      albumId: artist1.releases[0]._id,
+    });
 
-    // Create example albums with Megan ID
-    // await Album.create([
-    //   {
-    //     title: "Plastic Beach",
-    //     artist: "Gorillaz",
-    //     genre: ["Alternative", "Indie"],
-    //     year: 2010,
-    //     listened: true,
-    //     rating: 3.0,
-    //     review: "boooooo",
-    //     artistId: artist3._id,
-    //     userId: user2._id,
-    //   },
-    //   {
-    //     title: "The Fat of the Land",
-    //     artist: "The Prodigy",
-    //     genre: ["Electronic", "Dance"],
-    //     year: 1997,
-    //     listened: false,
-    //     artistId: artist4._id,
-    //     userId: user2._id,
-    //   },
-    //   {
-    //     title: "Fly or Die",
-    //     artist: "N.E.R.D",
-    //     genre: ["Rock", "Hip-Hop"],
-    //     year: 2004,
-    //     listened: true,
-    //     rating: 8.0,
-    //     review: "oooooooh",
-    //     artistId: artist2._id,
-    //     userId: user2._id,
-    //   },
-    // ]);
+    const review2 = await Review.create({
+      rating: 6,
+      comment: "wowwwww",
+      userId: user2._id,
+      albumId: artist2.releases[1]._id,
+    });
+
+    const review3 = await Review.create({
+      rating: 4,
+      comment: "booooo",
+      userId: user1._id,
+      albumId: artist3.releases[0]._id,
+    });
 
     console.log("Created albums");
     console.log("\nSeed data added successfully!");
@@ -181,7 +133,11 @@ const seedData = async () => {
     console.log(`Artist 2 ID: ${artist2._id}`);
     console.log(`Artist 3 ID: ${artist3._id}`);
     console.log(`Artist 4 ID: ${artist4._id}`);
+    console.log(`Review 1 ID: ${review1._id}`);
+    console.log(`Review 2 ID: ${review2._id}`);
+    console.log(`Review 3 ID: ${review3._id}`);
 
+    //Close database connection
     await mongoose.connection.close();
     console.log("\nDatabase connection closed");
   } catch (error) {

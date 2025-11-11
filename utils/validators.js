@@ -90,13 +90,23 @@ export const reviewSchema = {
       errorMessage: "Rating is required",
     },
   },
-  review: {
+  comment: {
     in: ["body"],
     isString: {
-      errorMessage: "Review must be a string",
+      errorMessage: "Comment must be a string",
     },
     notEmpty: {
-      errorMessage: "Review is required",
+      errorMessage: "Comment is required",
+    },
+  },
+};
+
+export const reviewIdSchema = {
+  id: {
+    in: ["params"],
+    custom: {
+      options: (value) => mongoose.Types.ObjectId.isValid(value),
+      errorMessage: "Review ID 'id' parameter must be a valid ObjectId",
     },
   },
 };

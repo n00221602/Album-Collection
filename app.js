@@ -6,6 +6,7 @@ import adminRouter from "./controllers/admin.js";
 import albumRouter from "./controllers/albums.js";
 import authRouter from "./controllers/auth.js";
 import artistRouter from "./controllers/artists.js";
+import reviewRouter from "./controllers/reviews.js";
 
 const createApp = () => {
   const app = express();
@@ -35,6 +36,7 @@ const createApp = () => {
   app.use("/albums", albumRouter);
   app.use("/auth", authRouter);
   app.use("/artists", artistRouter);
+  app.use("/reviews", reviewRouter);
 
   const unknownEndpoint = (_req, res) => {
     res.status(404).send({ error: "Unknown endpoint" });
