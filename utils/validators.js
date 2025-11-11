@@ -1,18 +1,14 @@
 import mongoose from "mongoose";
 
+//Album validators
 export const albumSchema = {
   title: {
     in: ["body"],
-    isString: true,
-    notEmpty: {
-      errorMessage: "Title is required and must be a string",
+    isString: {
+      errorMessage: "Title must be a string",
     },
-  },
-  artist: {
-    in: ["body"],
-    isString: true,
     notEmpty: {
-      errorMessage: "Artist is required and must be a string",
+      errorMessage: "Title is required",
     },
   },
   genre: {
@@ -31,26 +27,6 @@ export const albumSchema = {
       errorMessage: "Year is required and must be between 1900 and 2025",
     },
   },
-  listened: {
-    in: ["body"],
-    isBoolean: true,
-    optional: true,
-    errorMessage: "Listened must be a boolean",
-  },
-  rating: {
-    in: ["body"],
-    isInt: {
-      options: { min: 0, max: 10 },
-    },
-    optional: true,
-    errorMessage: "Rating must be between 0 and 10",
-  },
-  review: {
-    in: ["body"],
-    isString: true,
-    optional: true,
-    errorMessage: "Review must be a string",
-  },
 };
 
 export const albumIdSchema = {
@@ -63,6 +39,69 @@ export const albumIdSchema = {
   },
 };
 
+//Artist validators
+export const artistSchema = {
+  name: {
+    in: ["body"],
+    isString: {
+      errorMessage: "Name must be a string",
+    },
+    notEmpty: {
+      errorMessage: "Name is required",
+    },
+  },
+  releases: {
+    in: ["body"],
+    isArray: true,
+    notEmpty: {
+      errorMessage: "Releases is required and must be an array",
+    },
+  },
+  bio: {
+    in: ["body"],
+    isString: {
+      errorMessage: "Bio must be a string",
+    },
+    notEmpty: {
+      errorMessage: "Bio is required",
+    },
+  },
+};
+
+export const artistIdSchema = {
+  id: {
+    in: ["params"],
+    custom: {
+      options: (value) => mongoose.Types.ObjectId.isValid(value),
+      errorMessage: "Artist ID 'id' parameter must be a valid ObjectId",
+    },
+  },
+};
+
+//Review validators
+export const reviewSchema = {
+  rating: {
+    in: ["body"],
+    isInt: {
+      options: { min: 0, max: 10 },
+      errorMessage: "Rating must be an integer between 0 and 10",
+    },
+    notEmpty: {
+      errorMessage: "Rating is required",
+    },
+  },
+  review: {
+    in: ["body"],
+    isString: {
+      errorMessage: "Review must be a string",
+    },
+    notEmpty: {
+      errorMessage: "Review is required",
+    },
+  },
+};
+
+//Auth validators
 export const registerSchema = {
   name: {
     in: ["body"],

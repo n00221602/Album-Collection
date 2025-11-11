@@ -1,101 +1,179 @@
 import { Router } from "express";
-import Album from "../models/album.js";
+import Artist from "../models/artist.js";
 import { albumSchema, albumIdSchema } from "../utils/validators.js";
 import { HttpError, NOT_FOUND } from "../utils/HttpError.js";
 import { validate } from "../middleware/validateRequest.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, requireAdmin } from "../middleware/auth.js";
 
-const SUCCESS_NO_CONTENT = 204;
+//const SUCCESS_NO_CONTENT = 204;
 
 const albumRouter = Router();
 
-// Get all albums for the logged-in user
+//Get all albums by extracting them from each artist
 albumRouter.get("/", requireAuth, async (req, res) => {
-  const albums = await Album.find({ userId: req.session.userId }).exec();
-  res.json(albums);
+  const artists = await Artist.find().exec();
+
+  //Define empty array to hold all albums
+  const allAlbums = [];
+
+  //Loop through each artist and their releases and push to allAlbums
+  artists.forEach((artist) => {
+    artist.releases.forEach((album) => {
+      allAlbums.push({
+        id: album._id,
+        title: album.title,
+        genre: album.genre,
+        year: album.year,
+        artist: {
+          id: artist.id,
+          name: artist.name,
+        },
+      });
+    });
+  });
+
+  res.json(allAlbums);
 });
 
-// Get single album by ID
-albumRouter.get("/:id", requireAuth, validate(albumIdSchema), async (req, res) => {
-  // Only return album if it belongs to the logged-in user
-  const album = await Album.findOne({
-    _id: req.params.id,
-    userId: req.session.userId,
-  }).exec();
+//Get an album by ID
+albumRouter.get("/:id", requireAuth, async (req, res) => {
+  const artists = await Artist.find().exec();
 
-  if (!album) {
+  let targetAlbum = null;
+  let targetArtist = null;
+
+  //Loop through each artist to find the album. If id matches the loop breaks
+  for (const artist of artists) {
+    const album = artist.releases.id(req.params.id);
+    if (album) {
+      targetAlbum = album;
+      targetArtist = artist;
+      break;
+    }
+  }
+
+  if (!targetAlbum) {
     throw new HttpError(NOT_FOUND, "Could not find album");
   }
 
-  res.json(album);
-});
-
-// Create new album
-albumRouter.post("/", requireAuth, validate(albumSchema), async (req, res) => {
-  const { title, artist, genre, year, listened, rating, review } = req.body;
-
-  // Associate album with the logged-in user
-  const album = await Album.create({
-    title,
-    artist,
-    genre,
-    year,
-    listened: listened || false,
-    rating,
-    review,
-    userId: req.session.userId,
+  //Return the targetted album
+  res.json({
+    id: targetAlbum._id,
+    title: targetAlbum.title,
+    genre: targetAlbum.genre,
+    year: targetAlbum.year,
+    artist: {
+      id: targetArtist.id,
+      name: targetArtist.name,
+    },
   });
-
-  res.status(201).json(album);
 });
 
-// Update album
+//Create new album for an artist
+albumRouter.post("/", requireAdmin, validate(albumSchema), async (req, res) => {
+  const { title, genre, year, artistId } = req.body;
+
+  const artist = await Artist.findById(artistId);
+
+  if (!artist) {
+    throw new HttpError(NOT_FOUND, "Could not find artist");
+  }
+
+  //Add the new album to artist releases
+  const newAlbum = { title, genre, year };
+  artist.releases.push(newAlbum);
+  await artist.save();
+
+  //Since the new album is pushed to the end of the array, we can get it's index using length -1
+  const createdAlbum = artist.releases[artist.releases.length - 1];
+
+  res.status(201).json({
+    id: createdAlbum._id,
+    title: createdAlbum.title,
+    genre: createdAlbum.genre,
+    year: createdAlbum.year,
+    artist: {
+      id: artist.id,
+      name: artist.name,
+    },
+  });
+});
+
+//Update an existing album
 albumRouter.put(
   "/:id",
-  requireAuth,
+  requireAdmin,
   validate(albumIdSchema),
   validate(albumSchema),
   async (req, res) => {
-    const { title, artist, genre, year, listened, rating, review } = req.body;
+    const { title, genre, year } = req.body;
+    const artists = await Artist.find().exec();
 
-    const album = await Album.findOneAndUpdate(
-      {
-        _id: req.params.id,
-        userId: req.session.userId,
-      },
-      {
-        title,
-        artist,
-        genre,
-        year,
-        listened,
-        rating,
-        review,
-      },
-      { new: true }
-    ).exec();
+    let updatedAlbum = null;
+    let parentArtist = null;
 
-    if (!album) {
+    //Find the target album id by looping through each artist
+    for (const artist of artists) {
+      const album = artist.releases.id(req.params.id);
+      if (album) {
+        //Update the album fields
+        album.title = title;
+        album.genre = genre;
+        album.year = year;
+
+        //Saves any changes made
+        await artist.save();
+
+        updatedAlbum = album;
+        parentArtist = artist;
+        break;
+      }
+    }
+
+    if (!updatedAlbum) {
       throw new HttpError(NOT_FOUND, "Could not find album");
     }
 
-    res.json(album);
+    res.json({
+      id: updatedAlbum._id,
+      title: updatedAlbum.title,
+      genre: updatedAlbum.genre,
+      year: updatedAlbum.year,
+      artist: {
+        id: parentArtist.id,
+        name: parentArtist.name,
+      },
+    });
   }
 );
 
-// Delete album
-albumRouter.delete("/:id", requireAuth, validate(albumIdSchema), async (req, res) => {
-  // Only delete album if it belongs to the logged-in user
-  const result = await Album.findOneAndDelete({
-    _id: req.params.id,
-    userId: req.session.userId,
-  }).exec();
+//Delete album
+albumRouter.delete(
+  "/:id",
+  requireAdmin,
+  validate(albumIdSchema),
+  async (req, res) => {
+    const artists = await Artist.find().exec();
+    //deleted flag
+    let deleted = false;
 
-  if (!result) {
-    throw new HttpError(NOT_FOUND, "Could not find album");
+    //Find target album by looping through each artist
+    for (const artist of artists) {
+      const album = artist.releases.id(req.params.id);
+      if (album) {
+        artist.releases.pull(req.params.id);
+        await artist.save();
+        deleted = true;
+        break;
+      }
+    }
+
+    if (!deleted) {
+      throw new HttpError(NOT_FOUND, "Could not find album");
+    }
+
+    res.status(200).json({ message: "Album deleted successfully" });
   }
-
-  res.status(SUCCESS_NO_CONTENT).end();
-});
+);
 
 export default albumRouter;

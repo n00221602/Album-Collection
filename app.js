@@ -5,12 +5,13 @@ import mongoose from "mongoose";
 import adminRouter from "./controllers/admin.js";
 import albumRouter from "./controllers/albums.js";
 import authRouter from "./controllers/auth.js";
+import artistRouter from "./controllers/artists.js";
 
 const createApp = () => {
   const app = express();
   app.use(express.json());
 
-  // Configure express-session with connect-mongo
+  //Configure express-session with connect-mongo
   app.use(
     session({
       secret: process.env.SESSION_SECRET || "dev-secret-change-in-production",
@@ -21,7 +22,7 @@ const createApp = () => {
         touchAfter: 24 * 3600, // lazy session update
       }),
       cookie: {
-        maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+        maxAge: 1000 * 60 * 60 * 24 * 7, //Sets the cookie lifespan to 1 week
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
@@ -29,10 +30,11 @@ const createApp = () => {
     })
   );
 
-  //Connect controller routes
+  //Connect the controller routes
   app.use("/admin", adminRouter);
   app.use("/albums", albumRouter);
   app.use("/auth", authRouter);
+  app.use("/artists", artistRouter);
 
   const unknownEndpoint = (_req, res) => {
     res.status(404).send({ error: "Unknown endpoint" });

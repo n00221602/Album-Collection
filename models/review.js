@@ -1,31 +1,12 @@
 import mongoose from "mongoose";
 
-const albumSchema = new mongoose.Schema(
+const reviewSchema = new mongoose.Schema(
   {
-    title: {
-      type: String,
-      required: true,
-    },
-    artist: {
-      type: String,
-      required: true,
-    },
-    genre: {
-      type: [String],
-      required: true,
-    },
-    year: {
-      type: Number,
-      required: true,
-    },
-    listened: {
-      type: Boolean,
-      default: false,
-    },
     rating: {
       type: Number,
       min: 0,
       max: 10,
+      required: true,
     },
     review: {
       type: String,
@@ -40,7 +21,7 @@ const albumSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-albumSchema.set("toJSON", {
+reviewSchema.set("toJSON", {
   transform: (_document, returnedObject) => {
     returnedObject.id = returnedObject._id.toString();
     delete returnedObject._id;
@@ -51,6 +32,6 @@ albumSchema.set("toJSON", {
   },
 });
 
-const Album = mongoose.model("Album", albumSchema);
+const Review = mongoose.model("Review", reviewSchema);
 
-export default Album;
+export default Review;
