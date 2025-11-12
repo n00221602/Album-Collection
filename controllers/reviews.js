@@ -3,7 +3,8 @@ import Review from "../models/review.js";
 import { reviewSchema, reviewIdSchema } from "../utils/validators.js";
 import { HttpError, NOT_FOUND, BAD_REQUEST } from "../utils/HttpError.js";
 import { validate } from "../middleware/validateRequest.js";
-import { requireAuth, requireAdmin } from "../middleware/auth.js";
+import { requireAuth } from "../middleware/auth.js";
+import Artist from "../models/artist.js";
 
 //const SUCCESS_NO_CONTENT = 204;
 
@@ -12,27 +13,40 @@ const reviewRouter = Router();
 // Get all reviews for the logged-in user
 reviewRouter.get("/", requireAuth, async (req, res) => {
   const reviews = await Review.find({ userId: req.session.userId}).exec();
+  if (!reviews) {
+      throw new HttpError(NOT_FOUND, "Could not find reviews");
+    }
   res.json(reviews);
 });
 
 // Get single review by ID
 reviewRouter.get("/:id", requireAuth, validate(reviewIdSchema), async (req, res) => {
-    //review can be viewed by any authenticated user
+    //Review can only be viewed by the user who created it
     const review = await Review.findOne({
       _id: req.params.id,
       userId: req.session.userId
     }).exec();
 
+
+    //Adding album info to the review
+    const artist = await Artist.findOne({ "releases._id": review.albumId }).exec();
+    const albumInfo = {
+      title: artist.releases.id(review.albumId).title,
+      artist: artist.name,
+      genre: artist.releases.id(review.albumId).genre,
+      year: artist.releases.id(review.albumId).year
+    };
+
     if (!review) {
       throw new HttpError(NOT_FOUND, "Could not find review");
     }
 
-    res.json(review);
+    res.json({ review, albumInfo });
   }
 );
 
 // Create new review
-reviewRouter.post("/", requireAdmin, validate(reviewSchema), async (req, res) => {
+reviewRouter.post("/", requireAuth, validate(reviewSchema), async (req, res) => {
     const { rating, comment, albumId } = req.body;
 
     //Check if the user has already reviewed the album
@@ -58,7 +72,7 @@ reviewRouter.post("/", requireAdmin, validate(reviewSchema), async (req, res) =>
 );
 
 // Update review
-reviewRouter.put("/:id", requireAdmin, validate(reviewIdSchema), validate(reviewSchema), async (req, res) => {
+reviewRouter.put("/:id", requireAuth, validate(reviewIdSchema), validate(reviewSchema), async (req, res) => {
     const { rating, comment } = req.body;
 
     const review = await Review.findOneAndUpdate(
@@ -82,7 +96,7 @@ reviewRouter.put("/:id", requireAdmin, validate(reviewIdSchema), validate(review
 );
 
 // Delete review
-reviewRouter.delete("/:id", requireAdmin, validate(reviewIdSchema), async (req, res) => {
+reviewRouter.delete("/:id", requireAuth, validate(reviewIdSchema), async (req, res) => {
     // Only delete review if it belongs to the logged-in user
     const result = await Review.findOneAndDelete({
       _id: req.params.id,

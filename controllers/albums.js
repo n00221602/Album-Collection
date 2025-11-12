@@ -4,6 +4,7 @@ import { albumSchema, albumIdSchema } from "../utils/validators.js";
 import { HttpError, NOT_FOUND } from "../utils/HttpError.js";
 import { validate } from "../middleware/validateRequest.js";
 import { requireAdmin } from "../middleware/auth.js";
+import Review from "../models/review.js";
 
 //const SUCCESS_NO_CONTENT = 204;
 
@@ -52,6 +53,14 @@ albumRouter.get("/:id", async (req, res) => {
     }
   }
 
+  //Find all reviews for the album by cross-referencing its id
+  const review = await Review.find({ albumId: req.params.id }).exec();
+  const reviewInfo = {
+    rating: review.rating,
+    comment: review.comment,
+    userId: review.userId
+  }
+
   if (!targetAlbum) {
     throw new HttpError(NOT_FOUND, "Could not find album");
   }
@@ -66,6 +75,7 @@ albumRouter.get("/:id", async (req, res) => {
       id: targetArtist.id,
       name: targetArtist.name,
     },
+    reviewInfo
   });
 });
 
