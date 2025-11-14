@@ -3,14 +3,14 @@ import Artist from "../models/artist.js";
 import { artistSchema, artistIdSchema } from "../utils/validators.js";
 import { HttpError, NOT_FOUND } from "../utils/HttpError.js";
 import { validate } from "../middleware/validateRequest.js";
-import { requireAuth, requireAdmin } from "../middleware/auth.js";
+import { requireAdmin } from "../middleware/auth.js";
 
 const SUCCESS_NO_CONTENT = 204;
 
 const artistRouter = Router();
 
 // Get all artists for the logged-in user
-artistRouter.get("/", requireAuth, async (req, res) => {
+artistRouter.get("/", async (req, res) => {
   const artists = await Artist.find().exec();
   res.json(artists);
 });
@@ -18,7 +18,6 @@ artistRouter.get("/", requireAuth, async (req, res) => {
 // Get single artist by ID
 artistRouter.get(
   "/:id",
-  requireAuth,
   validate(artistIdSchema),
   async (req, res) => {
     //Artist can be viewed by any authenticated user
