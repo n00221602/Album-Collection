@@ -77,7 +77,7 @@ This is an album review application. Users can browse albums from various artist
 ### Testing ###
 
 ## Integration Testing
-- API endpoints tested using Insomnia
+- API endpoints tested manually using Insomnia
 - Database operations tested using MongoDB Compass
 - Verifying authentication
 - CRUD validation

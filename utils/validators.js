@@ -13,9 +13,11 @@ export const albumSchema = {
   },
   genre: {
     in: ["body"],
-    isArray: true,
+    isArray:{
+      errorMessage: "Genre must be an array",
+    },
     notEmpty: {
-      errorMessage: "Genre is required and must be an array",
+      errorMessage: "Genre is required",
     },
   },
   year: {
@@ -52,9 +54,11 @@ export const artistSchema = {
   },
   releases: {
     in: ["body"],
-    isArray: true,
+    isArray: {
+      errorMessage: "Releases must be an array",
+    },
     notEmpty: {
-      errorMessage: "Releases is required and must be an array",
+      errorMessage: "Releases is required",
     },
   },
   bio: {
