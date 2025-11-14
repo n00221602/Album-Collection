@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "cross-env NODE_ENV=test MONGODB_URI=mongodb://localhost:27017/movie-watchlist-test SESSION_SECRET=test-secret jest --runInBand",
+    "test": "cross-env NODE_ENV=test MONGODB_URI=mongodb://localhost:27017/album-collection-test SESSION_SECRET=test-secret jest --runInBand",
     "test:watch": "npm test -- --watch",
     "test:coverage": "npm test -- --coverage"
   },

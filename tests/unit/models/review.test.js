@@ -33,6 +33,20 @@ describe("Review Model", () => {
       expect(review.rating).toBeUndefined();
     });
 
+    test("missing comment field", () => {
+      const testReview = {
+        rating: 8,
+        userId: new mongoose.Types.ObjectId(),
+        albumId: new mongoose.Types.ObjectId(),
+      };
+
+      const review = new Review(testReview);
+      const isValid = review.comment !== undefined && review.comment !== null;
+
+      expect(isValid).toBe(false);
+      expect(review.comment).toBeUndefined();
+    });
+
     test("missing userId field", () => {
       const testReview = {
         rating: 8,
@@ -59,20 +73,6 @@ describe("Review Model", () => {
 
       expect(isValid).toBe(false);
       expect(review.albumId).toBeUndefined();
-    });
-
-    test("should handle missing comment field", () => {
-      const testReview = {
-        rating: 8,
-        userId: new mongoose.Types.ObjectId(),
-        albumId: new mongoose.Types.ObjectId(),
-      };
-
-      const review = new Review(testReview);
-      const isValid = review.comment !== undefined && review.comment !== null;
-
-      expect(isValid).toBe(false);
-      expect(review.comment).toBeUndefined();
     });
 
     test("should accept valid rating range", () => {

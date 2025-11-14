@@ -96,11 +96,9 @@ export const reviewSchema = {
   },
   comment: {
     in: ["body"],
+    optional: true,
     isString: {
       errorMessage: "Comment must be a string",
-    },
-    notEmpty: {
-      errorMessage: "Comment is required",
     },
   },
 };

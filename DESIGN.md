@@ -1,7 +1,8 @@
-## Overview
-This is an album review application. Users can browse albums from various artists and leave their own rating and comment on albums they've listened to. Reviewed albums get added to the User's album collection.
+### Overview ###
+This is an album review application that allows users to browse albums from various artists and leave their own rating and comment on albums they've listened to. 
+Reviewed albums get added to the User's album collection.
 
-## Functionality
+### Functionality ###
 - User authentication and registration with role-based access
 - Browse albums and artists
 - Create personal album reviews with ratings and comments
@@ -31,6 +32,24 @@ This is an album review application. Users can browse albums from various artist
 - User can only have one review per album
 - User can only modify their own 
 - Reviews are added to the user's collection
+
+### Database Relationships ###
+
+![Database ERD](image.png)
+
+## Artist to Album Relationship  
+- 1:M - One Artist can have multiple Albums. Albums can only belong to one Artist
+- The Album schema is embedded within the Artist's releases array
+- Albums cannot exist without an Artist
+
+## Album to Review Relationship
+- 1:M - One Album can have multiple reviews. Reviews can only belong to one Album
+- Each Review contains an albumId field that references the Album's ObjectId
+
+## User to Review Relationship
+- 1:M - One User can have multiple Reviews. Reviews can only belong to one User.
+- Each Review contains a userId field that references the User's ObjectId
+- Reviews cannot exist without a User
 
 ### Controllers / API Endpoints ###
 
@@ -77,11 +96,17 @@ This is an album review application. Users can browse albums from various artist
 ### Testing ###
 
 ## Integration Testing
+- Api endpoints tested automatically using Jest
 - API endpoints tested manually using Insomnia
 - Database operations tested using MongoDB Compass
 - Verifying authentication
+- Schema validation
 - CRUD validation
 - Error handling validation
-- Session management testing
 
 ## Unit Testing
+- Models testing using Jest
+- Schema field validation (missing fields, valid fields)
+- User role validation
+- Password hashing and verification methods
+- ObjectId reference validation

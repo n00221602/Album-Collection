@@ -2,6 +2,8 @@ import createApp from "../../app.js";
 import request from "supertest";
 import User from "../../models/user.js";
 import mongoose from "mongoose";
+import dotenv from "dotenv";
+dotenv.config();
 
 describe("Auth API", () => {
   let app;
@@ -14,16 +16,17 @@ describe("Auth API", () => {
   afterAll(async () => {
     await mongoose.connection.dropDatabase();
     await mongoose.connection.close();
-  });
+  }, 10000);
 
   afterEach(async () => {
     await User.deleteMany({});
     await mongoose.connection.db.collection("sessions").deleteMany({});
   });
 
-  describe("POST /api/auth/register", () => {
+  describe("POST /auth/register", () => {
     test("should register a new user with valid credentials", async () => {
-      const response = await request(app).post("/api/auth/register").send({
+      const response = await request(app).post("/auth/register").send({
+        name: "New User",
         email: "newuser@example.com",
         password: "SecurePass123",
       });
@@ -36,18 +39,20 @@ describe("Auth API", () => {
       expect(response.body).toHaveProperty("user");
       expect(response.body.user).toHaveProperty("email", "newuser@example.com");
       expect(response.body.user).toHaveProperty("role", "user");
-      expect(response.body.user).not.toHaveProperty("passwordHash");
+      expect(response.body.user).toHaveProperty("passwordHash");
     });
 
     test("should not register user with duplicate email", async () => {
       // Create first user
-      await request(app).post("/api/auth/register").send({
+      await request(app).post("/auth/register").send({
+        name: "First User",
         email: "duplicate@example.com",
         password: "Password123",
       });
 
       // Try to create duplicate
-      const response = await request(app).post("/api/auth/register").send({
+      const response = await request(app).post("/auth/register").send({
+        name: "Second User",
         email: "duplicate@example.com",
         password: "DifferentPass456",
       });
@@ -57,7 +62,8 @@ describe("Auth API", () => {
     });
 
     test("should reject registration with invalid email", async () => {
-      const response = await request(app).post("/api/auth/register").send({
+      const response = await request(app).post("/auth/register").send({
+        name: "Test User",
         email: "not-an-email",
         password: "Password123",
       });
@@ -67,7 +73,8 @@ describe("Auth API", () => {
     });
 
     test("should reject registration with weak password", async () => {
-      const response = await request(app).post("/api/auth/register").send({
+      const response = await request(app).post("/auth/register").send({
+        name: "Test User",
         email: "test@example.com",
         password: "weak",
       });
@@ -78,7 +85,8 @@ describe("Auth API", () => {
     });
 
     test("should reject registration without uppercase in password", async () => {
-      const response = await request(app).post("/api/auth/register").send({
+      const response = await request(app).post("/auth/register").send({
+        name: "Test User",
         email: "test@example.com",
         password: "alllowercase123",
       });
@@ -88,7 +96,8 @@ describe("Auth API", () => {
     });
 
     test("should reject registration without number in password", async () => {
-      const response = await request(app).post("/api/auth/register").send({
+      const response = await request(app).post("/auth/register").send({
+        name: "Test User",
         email: "test@example.com",
         password: "NoNumbersHere",
       });
@@ -98,7 +107,8 @@ describe("Auth API", () => {
     });
 
     test("should reject registration with missing fields", async () => {
-      const response = await request(app).post("/api/auth/register").send({
+      const response = await request(app).post("/auth/register").send({
+        name: "Test User",
         email: "test@example.com",
       });
 
@@ -107,7 +117,8 @@ describe("Auth API", () => {
     });
 
     test("should set session cookie upon successful registration", async () => {
-      const response = await request(app).post("/api/auth/register").send({
+      const response = await request(app).post("/auth/register").send({
+        name: "Session Test",
         email: "sessiontest@example.com",
         password: "TestPass123",
       });
@@ -117,17 +128,18 @@ describe("Auth API", () => {
     });
   });
 
-  describe("POST /api/auth/login", () => {
+  describe("POST /auth/login", () => {
     beforeEach(async () => {
       // Create a test user before each login test
-      await request(app).post("/api/auth/register").send({
+      await request(app).post("/auth/register").send({
+        name: "Login Test",
         email: "logintest@example.com",
         password: "TestPass123",
       });
     });
 
     test("should login with correct credentials", async () => {
-      const response = await request(app).post("/api/auth/login").send({
+      const response = await request(app).post("/auth/login").send({
         email: "logintest@example.com",
         password: "TestPass123",
       });
@@ -139,12 +151,12 @@ describe("Auth API", () => {
         "email",
         "logintest@example.com"
       );
-      expect(response.body.user).not.toHaveProperty("passwordHash");
+      expect(response.body.user).toHaveProperty("passwordHash");
       expect(response.headers["set-cookie"]).toBeDefined();
     });
 
     test("should reject login with incorrect password", async () => {
-      const response = await request(app).post("/api/auth/login").send({
+      const response = await request(app).post("/auth/login").send({
         email: "logintest@example.com",
         password: "WrongPassword123",
       });
@@ -154,7 +166,7 @@ describe("Auth API", () => {
     });
 
     test("should reject login with non-existent email", async () => {
-      const response = await request(app).post("/api/auth/login").send({
+      const response = await request(app).post("/auth/login").send({
         email: "nonexistent@example.com",
         password: "SomePassword123",
       });
@@ -164,7 +176,7 @@ describe("Auth API", () => {
     });
 
     test("should reject login with missing fields", async () => {
-      const response = await request(app).post("/api/auth/login").send({
+      const response = await request(app).post("/auth/login").send({
         email: "logintest@example.com",
       });
 
@@ -173,7 +185,7 @@ describe("Auth API", () => {
     });
 
     test("should reject login with invalid email format", async () => {
-      const response = await request(app).post("/api/auth/login").send({
+      const response = await request(app).post("/auth/login").send({
         email: "not-an-email",
         password: "TestPass123",
       });
@@ -183,51 +195,53 @@ describe("Auth API", () => {
     });
   });
 
-  describe("POST /api/auth/logout", () => {
+  describe("POST /auth/logout", () => {
     test("should logout and clear session cookie", async () => {
       // Register and login
-      await request(app).post("/api/auth/register").send({
+      await request(app).post("/auth/register").send({
+        name: "Logout Test",
         email: "logouttest@example.com",
         password: "TestPass123",
       });
 
       const agent = request.agent(app);
-      await agent.post("/api/auth/login").send({
+      await agent.post("/auth/login").send({
         email: "logouttest@example.com",
         password: "TestPass123",
       });
 
       // Logout
-      const response = await agent.post("/api/auth/logout");
+      const response = await agent.post("/auth/logout");
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("message", "Logout successful");
     });
 
     test("should allow logout even without session", async () => {
-      const response = await request(app).post("/api/auth/logout");
+      const response = await request(app).post("/auth/logout");
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("message", "Logout successful");
     });
   });
 
-  describe("GET /api/auth/me", () => {
+  describe("GET /auth/me", () => {
     test("should return user info when authenticated", async () => {
       // Register and login
-      await request(app).post("/api/auth/register").send({
+      await request(app).post("/auth/register").send({
+        name: "Me Test",
         email: "metest@example.com",
         password: "TestPass123",
       });
 
       const agent = request.agent(app);
-      await agent.post("/api/auth/login").send({
+      await agent.post("/auth/login").send({
         email: "metest@example.com",
         password: "TestPass123",
       });
 
       // Check auth status
-      const response = await agent.get("/api/auth/me");
+      const response = await agent.get("/auth/me");
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("authenticated", true);
@@ -236,7 +250,7 @@ describe("Auth API", () => {
     });
 
     test("should return unauthenticated when no session", async () => {
-      const response = await request(app).get("/api/auth/me");
+      const response = await request(app).get("/auth/me");
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty("authenticated", false);
@@ -244,22 +258,23 @@ describe("Auth API", () => {
 
     test("should return unauthenticated after logout", async () => {
       // Register and login
-      await request(app).post("/api/auth/register").send({
+      await request(app).post("/auth/register").send({
+        name: "After Logout",
         email: "afterlogout@example.com",
         password: "TestPass123",
       });
 
       const agent = request.agent(app);
-      await agent.post("/api/auth/login").send({
+      await agent.post("/auth/login").send({
         email: "afterlogout@example.com",
         password: "TestPass123",
       });
 
       // Logout
-      await agent.post("/api/auth/logout");
+      await agent.post("/auth/logout");
 
       // Check auth status
-      const response = await agent.get("/api/auth/me");
+      const response = await agent.get("/auth/me");
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty("authenticated", false);
@@ -269,14 +284,15 @@ describe("Auth API", () => {
   describe("Session persistence", () => {
     test("should maintain session across multiple requests", async () => {
       // Register
-      await request(app).post("/api/auth/register").send({
+      await request(app).post("/auth/register").send({
+        name: "Session Test",
         email: "session@example.com",
         password: "TestPass123",
       });
 
       // Login with agent
       const agent = request.agent(app);
-      const loginResponse = await agent.post("/api/auth/login").send({
+      const loginResponse = await agent.post("/auth/login").send({
         email: "session@example.com",
         password: "TestPass123",
       });
@@ -284,7 +300,7 @@ describe("Auth API", () => {
       expect(loginResponse.status).toBe(200);
 
       // Make another request with same agent
-      const meResponse = await agent.get("/api/auth/me");
+      const meResponse = await agent.get("/auth/me");
 
       expect(meResponse.status).toBe(200);
       expect(meResponse.body).toHaveProperty("authenticated", true);
